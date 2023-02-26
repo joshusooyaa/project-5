@@ -6,3 +6,13 @@ services:
         command: python flask_brevets.py
         ports: 
           - "5001:5000"
+        environment:
+            MONGODB_HOSTNAME: brevetsdb
+        depends_on:
+          - brevetsdb
+        volumes:
+          - type: bind
+            source: brevets/
+            target: /app
+    brevetsdb:
+      image: mongo:5.0.5
