@@ -4,7 +4,8 @@ import logging
 
 client = MongoClient(host=f"mongodb://{os.environ['MONGODB_HOSTNAME']}:27017")
 db = client.brevetsdb
-db.races.insert_one({"open_time": "2000-12-20T20:22", "close_time": "2000-12-20T20:22", "cp_dist": "15", "start_time": "2000-12-20T20:22", "brevet_dist": "200"})
+db.races.insert_one({"checkpoint": "3","open_time": "2000-12-20T20:22", "close_time": "2000-12-20T20:22", "cp_dist": "15", "start_time": "2000-12-20T20:22", "brevet_dist": "200"})
+db.races.insert_one({"checkpoint": "4","open_time": "2000-12-20T20:22", "close_time": "2000-12-20T20:22", "cp_dist": "15", "start_time": "2000-12-20T20:22", "brevet_dist": "200"})
 
 
 def brevet_insert(open_time, close_time, cp_dist, start_time, brevet_dist):
@@ -16,6 +17,7 @@ def brevet_find(checkpoint=0):
   
   Data will be in key-value pair
   {
+    "checkpoint": "cp#",
     "open_time": "YYYY-MM-DD HH:mm",
     "close_time": "YYYY-MM-DD HH:mm",   
     "cp_dist": "#km",

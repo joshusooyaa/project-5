@@ -152,6 +152,7 @@
                
                 // Get necessary attributes to load data into/save data from
                 var km = document.querySelectorAll('input[name="km"]');
+                var mi = document.querySelectorAll('input[name="miles"]');
                 var open_time_field = document.querySelectorAll("input[name='open']")
                 var close_time_field = document.querySelectorAll("input[name='close']")
                 
@@ -171,15 +172,17 @@
                            else {
                               var len = data.result.length;
                               for (let i = 0; i < len; i++) {
-                                 open_time_field[i].value = moment(data.result[i].open_time).format("YYYY-MM-DDTHH:mm");
-                                 close_time_field[i].value = moment(data.result[i].close_time).format("YYYY-MM-DDTHH:mm");
-                                 km[i].value = data.result[i].cp_dist
+                                 var cp = data.result[i].checkpoint
 
-                                 $("#begin_date").val(moment(data.result[i].start_time).format("YYYY-MM-DDTHH:mm"))
-                                 console.log(data.result[i].brevet_dist)
-                                 $("#brevet_dist_km").val(data.result[i].brevet_dist);
+                                 open_time_field[cp].value = moment(data.result[i].open_time).format("YYYY-MM-DDTHH:mm");
+                                 close_time_field[cp].value = moment(data.result[i].close_time).format("YYYY-MM-DDTHH:mm");
+                                 km[cp].value = data.result[i].cp_dist;
+                                 mi[cp].value = (0.621371 * km[cp].value).toFixed(6);
                               }
                            }
+
+                           $("#begin_date").val(moment(data.result[0].start_time).format("YYYY-MM-DDTHH:mm"))
+                           $("#brevet_dist_km").val(data.result[0].brevet_dist);
                            
                          }
                        ).fail(function(err){
