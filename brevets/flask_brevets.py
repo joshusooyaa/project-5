@@ -82,8 +82,22 @@ def _fetch_data():
 
 
 @app.route("/_insert")
-def _insert_datah():
-    pass
+def _insert_data():
+    km = request.args.getlist('km[]') # Flask changes name by attaching [] to show it's an array
+    ot = request.args.getlist('otf[]', type=str)
+    ct = request.args.getlist('ctf[]', type=str)
+    start_date = request.args.get('start_date', type=str)
+    brevet_distance = request.args.get('brevet_distance', type=str)
+    
+    app.logger.debug("km={}".format(km))
+    app.logger.debug("otf={}".format(ot))
+    app.logger.debug("ctf={}".format(ct))
+    app.logger.debug("start_date={}".format(start_date))
+    app.logger.debug("brev_distance={}".format(brevet_distance))
+    
+    response = brevet_insert(ot, ct, km, start_date, brevet_distance)
+    
+    return flask.jsonify(result=response)
 
 #############
 

@@ -155,29 +155,39 @@
                 var mi = document.querySelectorAll('input[name="miles"]');
                 var open_time_field = document.querySelectorAll("input[name='open']")
                 var close_time_field = document.querySelectorAll("input[name='close']")
-                
+
                 $('#fetch').click(
                    function(event) {
-                     event.preventDefault();
-
+                     event.preventDefault(); // Prevent page from refreshing
+                     console.log(km)
                      console.log("Fetching Data")
                      // Simply send a JSON GET request to the server, flask_prevets.py which will
                      // send back the data as a JSON file where we can update the checkpoint information
                      // A for loop is used to get the JSON information for all 20 checkpoints
                      $.getJSON(FETCH_URL, {}).done(
                         function(data) {
-                           if (data.err) {
+                           if (data.err) { // Responds if data is empty
                               console.log(data.err);
                            }
                            else {
                               var len = data.result.length;
+                              console.log(data.result)
+                              console.log(len)
                               for (let i = 0; i < len; i++) {
                                  var cp = data.result[i].checkpoint
-
-                                 open_time_field[cp].value = moment(data.result[i].open_time).format("YYYY-MM-DDTHH:mm");
-                                 close_time_field[cp].value = moment(data.result[i].close_time).format("YYYY-MM-DDTHH:mm");
-                                 km[cp].value = data.result[i].cp_dist;
-                                 mi[cp].value = (0.621371 * km[cp].value).toFixed(6);
+                                 
+                                 if (data.result[i].open_time != "") {
+                                    open_time_field[cp].value = moment(data.result[i].open_time).format("YYYY-MM-DDTHH:mm");
+                                    close_time_field[cp].value = moment(data.result[i].close_time).format("YYYY-MM-DDTHH:mm");
+                                    km[cp].value = data.result[i].cp_dist;
+                                    mi[cp].value = (0.621371 * km[cp].value).toFixed(6);
+                                 }
+                                 else {
+                                    open_time_field[cp].value = "";
+                                    close_time_field[cp].value = "";
+                                    km[cp].value = ""
+                                    mi[cp].value = ""
+                                 }
                               }
                            }
 
@@ -194,11 +204,37 @@
                 
                 $('#insert').click(
                    function(event) {
-                     event.preventDefault();
+                     event.preventDefault(); // Prevent the page from refreshing
+                     console.log("Converting Data")
+                     
+                     // Need to convert the fields to readable values
+                     // Only need to save km (and not miles) since we can just convert km to miles when loading
+                     var kmArray = [];
+                     var otfArray = [];
+                     var ctfArray = [];
+                     var start_date = $("#begin_date").val();
+                     var brevet_distance = $("#brevet_dist_km").val();
+
+                     for (let i = 0; i < 20; i++) {
+                        kmArray.push(km[i].value);
+                        otfArray.push(open_time_field[i].value);
+                        ctfArray.push(close_time_field[i].value);
+                     }
+
+                     console.log(kmArray)
+
+                     var data_to_send = {km: kmArray, otf: otfArray, ctf: ctfArray, start_date: start_date, brevet_distance: brevet_distance}
+
                      console.log("Inserting Data")
-                     $.getJSON(FETCH_URL, {}).done(
+
+                     $.getJSON(INSERT_URL, data_to_send).done(
                         function(data) {
-                        
+                           if (data.result) {
+                              console.log("Successful save!")
+                           }
+                           else {
+                              console.log("Save failed!")
+                           }
                          } 
                        ).fail(function(err){
                          // In case you get an error...
