@@ -65,7 +65,7 @@
                <div class="col-md-6">
                   <label>Begins at</label>
                   <input type="datetime-local" name="begin_date" id="begin_date" value="2021-01-01T00:00" />
-                  <button id="fetch">Update</button>
+                  <button id="fetch">Display</button>
                   <button id="insert">Submit</button>
                </div>
                <!-- columns 5 to 10 -->
@@ -227,7 +227,25 @@
 
                      console.log("Inserting Data")
 
-                     $.getJSON(INSERT_URL, data_to_send).done(
+                     $.ajax({
+                        dataType: 'json',
+                        contentType: "application/json",
+                        type: 'POST',
+                        url: INSERT_URL,
+                        data: JSON.stringify(data_to_send),
+                        success: function(data) {
+                           if (data.status == 1) {
+                              console.log("Successfuly Saved! Response: ", data);
+                           }
+                           else {
+                              console.log("Insertion failed: ", data);
+                           }
+                        },
+                        error: function(err) {
+                           console.log("Error: ", err); }
+                     });
+
+                     /*$.getJSON(INSERT_URL, data_to_send).done(
                         function(data) {
                            if (data.result) {
                               console.log("Successful save!")
@@ -240,7 +258,7 @@
                          // In case you get an error...
                          console.log("Error!");
                          console.log(err);
-                       });
+                       });*/
                    });
 
                 $('input[name="miles"]').change(

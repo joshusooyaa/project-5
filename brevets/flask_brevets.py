@@ -11,6 +11,7 @@ import acp_times  # Brevet time calculations
 import config
 import logging
 from db_access import brevet_find, brevet_insert
+import json
 
 from datetime import timedelta
 
@@ -81,23 +82,41 @@ def _fetch_data():
         return flask.jsonify(err="No data saved")
 
 
-@app.route("/_insert")
+@app.route("/_insert", methods=["POST"])
 def _insert_data():
-    km = request.args.getlist('km[]') # Flask changes name by attaching [] to show it's an array
-    ot = request.args.getlist('otf[]', type=str)
-    ct = request.args.getlist('ctf[]', type=str)
-    start_date = request.args.get('start_date', type=str)
-    brevet_distance = request.args.get('brevet_distance', type=str)
+    message="Server error!" # Default error message
     
-    app.logger.debug("km={}".format(km))
-    app.logger.debug("otf={}".format(ot))
-    app.logger.debug("ctf={}".format(ct))
-    app.logger.debug("start_date={}".format(start_date))
-    app.logger.debug("brev_distance={}".format(brevet_distance))
+    try:
+        input_json = request.json
+        
+        km = input_json["km"]
+        ot = input_json["otf"]
+        ct = input_json["ctf"]
+        start_date = input_json["start_date"]
+        brevet_distance = input_json["brevet_distance"]
+        
+        # Check if any checkpoints are submitted ()
+        if (all(x == '' for x in km)):
+            message = "No checkpoint distances!"
+            raise Exception(message)
+        
+        # Check if control times are all emtpy (no info to submit) -- This will occur if brev_dist * 1.2 <= km
+        if (all(x == '' for x in ot) or all(y == '' for y in ct)):
+            message = "No control times!"
+            raise Exception(message)
+        
+        app.logger.debug("km={}".format(len(km)))
+        app.logger.debug("otf={}".format(ot))
+        app.logger.debug("ctf={}".format(ct))
+        app.logger.debug("start_date={}".format(start_date))
+        app.logger.debug("brev_distance={}".format(brevet_distance))
+
+        brevet_insert(ot, ct, km, start_date, brevet_distance)
+        
+        return flask.jsonify(result={"success": "1"}, message="Inserted!", status=1)
     
-    response = brevet_insert(ot, ct, km, start_date, brevet_distance)
-    
-    return flask.jsonify(result=response)
+    except:
+        return flask.jsonify(result={}, message=message, status=0)
 
 #############
 
