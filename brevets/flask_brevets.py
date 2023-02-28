@@ -76,7 +76,7 @@ def _calc_times():
 def _fetch_data():
     data = brevet_find()
 
-    if data is not None:
+    if len(data) != 0:
         return flask.jsonify(result=data)
     else:
         return flask.jsonify(err="No data saved")
@@ -105,12 +105,25 @@ def _insert_data():
             message = "No control times!"
             raise Exception(message)
         
-        app.logger.debug("km={}".format(len(km)))
-        app.logger.debug("otf={}".format(ot))
-        app.logger.debug("ctf={}".format(ct))
-        app.logger.debug("start_date={}".format(start_date))
-        app.logger.debug("brev_distance={}".format(brevet_distance))
-
+        # Check if data is present, but control time(s) missing
+        # Also check if cps are out of order or same cp is entered
+        # This could occur if km > brevet distance * 1.2
+        max_val = '-1'
+        for i in range(len(km)):
+            if ((ot[i] == '' or ct[i] == '') and (km[i]) != ''):
+                message = "Data present, but control time(s) missing"
+                raise Exception(message)
+            
+            if (km[i] != ''):
+                if (int(km[i]) <= int(max_val)):
+                    app.logger.debug("max_value={}".format(max_val))
+                    app.logger.debug("km[i]={}".format(km[i]))
+                    message = "Invalid CP"
+                    raise Exception(message)
+            
+            if (km[i] != ''):
+                max_val = km[i]
+                
         brevet_insert(ot, ct, km, start_date, brevet_distance)
         
         return flask.jsonify(result={"success": "1"}, message="Inserted!", status=1)

@@ -28,15 +28,6 @@ def brevet_insert(otArr, ctArr, kmArr, start_time, brevet_dist):
                       "start_time" : start_time, 
                       "brevet_dist": brevet_dist 
                       })
-
-
-  """for cp in range(len(kmArr)):
-    db.races.update_one({"checkpoint": str(cp)},
-                        {"$set": {"open_time"  : otArr[cp],
-                                  "close_time" : ctArr[cp],
-                                  "cp_dist"    : kmArr[cp],
-                                  "start_time" : start_time, 
-                                  "brevet_dist": brevet_dist}})"""
   
 
 def brevet_find():

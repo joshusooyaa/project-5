@@ -159,7 +159,6 @@
                 $('#fetch').click(
                    function(event) {
                      event.preventDefault(); // Prevent page from refreshing
-                     console.log(km)
                      console.log("Fetching Data")
                      // Simply send a JSON GET request to the server, flask_prevets.py which will
                      // send back the data as a JSON file where we can update the checkpoint information
@@ -171,8 +170,6 @@
                            }
                            else {
                               var len = data.result.length;
-                              console.log(data.result)
-                              console.log(len)
                               for (let i = 0; i < len; i++) {
                                  var cp = data.result[i].checkpoint
                                  
@@ -189,11 +186,10 @@
                                     mi[cp].value = ""
                                  }
                               }
-                           }
-
-                           $("#begin_date").val(moment(data.result[0].start_time).format("YYYY-MM-DDTHH:mm"))
-                           $("#brevet_dist_km").val(data.result[0].brevet_dist);
-                           
+                              $("#begin_date").val(moment(data.result[0].start_time).format("YYYY-MM-DDTHH:mm"))
+                              $("#brevet_dist_km").val(data.result[0].brevet_dist);
+                              console.log("Data fetched!")  
+                           }              
                          }
                        ).fail(function(err){
                          // In case you get an error...
@@ -220,8 +216,6 @@
                         otfArray.push(open_time_field[i].value);
                         ctfArray.push(close_time_field[i].value);
                      }
-
-                     console.log(kmArray)
 
                      var data_to_send = {km: kmArray, otf: otfArray, ctf: ctfArray, start_date: start_date, brevet_distance: brevet_distance}
 
@@ -255,21 +249,6 @@
                         error: function(err) {
                            console.log("Error: ", err); }
                      });
-
-                     /*$.getJSON(INSERT_URL, data_to_send).done(
-                        function(data) {
-                           if (data.result) {
-                              console.log("Successful save!")
-                           }
-                           else {
-                              console.log("Save failed!")
-                           }
-                         } 
-                       ).fail(function(err){
-                         // In case you get an error...
-                         console.log("Error!");
-                         console.log(err);
-                       });*/
                    });
 
                 $('input[name="miles"]').change(

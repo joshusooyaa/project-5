@@ -13,10 +13,13 @@ logging.basicConfig(format='%(levelname)s:%(message)s',
                     level=logging.WARNING)
 log = logging.getLogger(__name__)
 
+client = MongoClient(host=f"mongodb://{os.environ['MONGODB_HOSTNAME']}:27017")
+db = client.brevetsdb
+
+# Need to clear database before testing
+db.races.drop()
+
 def test_insert():
-    client = MongoClient(host=f"mongodb://{os.environ['MONGODB_HOSTNAME']}:27017")
-    db = client.brevetsdb
-    
     # This is what is being tested
     # We're making sure that after we insert this using brevet_insert that the data is inserted
     # Answer# is expected result when we call find on the checkpoint
@@ -46,9 +49,6 @@ def test_insert():
 
 
 def test_fetch():
-    client = MongoClient(host=f"mongodb://{os.environ['MONGODB_HOSTNAME']}:27017")
-    db = client.brevetsdb
-    
     db.races.drop() # Needed since we're only checking brevet_find() and past tests have added to the database
     
     db.races.insert_one({"checkpoint": '0',"open_time": "2021-01-01T01:55","close_time": "2021-01-01T04:20",   
@@ -97,8 +97,7 @@ def test_integrated():
         assert 1 == 0
     except (IndexError, TypeError) as error:
         assert str(error) == 'list index out of range'
-    
-    
-    
-    
+
+    # Clear after testing
+    db.races.drop()   
 

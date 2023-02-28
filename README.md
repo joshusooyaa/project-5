@@ -1,51 +1,61 @@
-# UOCIS322 - Project 5 #
-Brevet time calculator with MongoDB!
+# RUSA ACP Control Time Calculator
 
-## Overview
+## `db_access.py`
+`db_access.py` contains two main functions, `brevet_insert` and `brevet_find`. These two functions are used to store and access the documents inside of the races collection inside of the brevets db.
 
-You'll add a storage to your previous project using MongoDB and `docker-compose`.
-As we discussed, `docker-compose` makes it easier to create, manage and connect multiple container to create a single service comprised of different sub-services.
+`brevet_find` does the following:
+1. Uses the .find() method to search all the documents inside the collection `races` and stores it as a list.
+2. Returns the documents from brevetsdb as a list, in which will be turned into a JSON file in `flask_brevets.py` which is sent to the JS.
 
-Presently, there's only a placeholder directory for your Flask app, and a `docker-compose` configuration file. You will copy over `brevets/` from your completed project 4, add a MongoDB service to docker-compose and your Flask app. You will also add two buttons named `Submit` and `Display` to the webpage. `Submit` must store the information (brevet distance, start time, checkpoints and their opening and closing times) in the database (overwriting existing ones). `Display` will fetch the information from the database and fill in the form with them.
+`brevet_insert` does the following:
+1. Takes in the data (open times, close times, cp distances, start time, and brevet distance)
+2. Before storing the data, all data from the collection is wiped (using .drop()) since the user is only allowed to save one session.
+3. After wiping the data, insert_one is used to insert the data in this format:
 
-Recommended: Review [MongoDB README](MONGODB.md) and[Docker Compose README](COMPOSE.md).
+```
+"checkpoint" : str(cp),
+"open_time"  : otArr[cp],
+"close_time" : ctArr[cp], 
+"cp_dist"    : kmArr[cp],
+"start_time" : start_time,
+"brevet_dist": brevet_dist
+```
+4. Nothing is returned from this function as `flask_brevets.py` handles all errors or exceptions.
 
-## Tasks
 
-1. Add two buttons `Submit` and `Display` in the ACP calculator page.
+## `acp_times.py`
+`acp_times.py` Contains two main functions, `open_time` and `close_time`. These two functions calculate the open and close time of the distances provided. 
 
-	- Upon clicking the `Submit` button, the control times should be inserted into a MongoDB database, and the form should be cleared (reset) **without** refreshing the page.
+`open_time` has several rules.
+1. If the distance is 0km it returns the start time of the race
+2. If the distance is greater than the brevet distance, then it'll make sure to only return a time calculated up to the brevet distance (so if the distance is 305 km, it'll only calculate for 300km)
+3. Otherwise, the time is calculated using distance intervals with their associated speeds. 
 
-	- Upon clicking the `Display` button, the entries from the database should be filled into the existing page.
+`close_time` follows a similar structure.
+1. If the distance is 0km it returns 1 hour after the start time
+2. If the distance is greater than the brevet distance then it'll make sure to return a fixed value for that brevet_distance. 
+3. If the distance is <= 60 then the time is calculated by distance/20 + 1 and that is used to shift the time. 
 
-	- Handle error cases appropriately. For example, Submit should return an error if no control times are input. One can imagine many such cases: you'll come up with as many cases as possible.
+All time is in YYYY-MM-DDTHH:MM format and must stay in this format. Both functions ensure that this format is kept by using arrow time and using the shift function the adjust the time. `brevet_start_time` is what gets shifted - as we are calculating the time based off of the beginning of the race each time. 
 
-2. An automated `nose` test suite with at least 2 test cases: at least one for for DB insertion and one for retrieval.
+## `flask_brevets.py`
+`flask_brevets.py` is updated to make sure the correct control distance and time is passed in so `acp_times.py` can calculate the correct times. For `flask_brevets.py` to pass a control distance, start time and brevet distance, it needs to get the information from the webpage (specifically from the JSON HTTP request) - so it uses request.args.get(). These arguments are passed in the Javascript from the getJSON request in `calc.html`. Using these arguments, they are then saved as variables in `flask_brevets.py` and are passed to the functions in `acp_times.py` to get the correct time calculations. Once this is done, the open and close times are saved and passed back to the Javascript in `calc.html` as a JSON file.
 
-3. Update README.md with brevet control time calculation rules (you were supposed to do this for Project 4), and additional information regarding this project.
-	- This project will be peer-reviewed, so be thorough.
+`flask_brevets.py` also handles fetch and insert requests by the user. If the user wants to save their data, as long as it's complete (there is at least one row filled in with valid data) then `flask_brevetes.py` handles this by responding to a POST request sent by the Javascript in the page -- it checks if the information passed is valid, and then sends that to `brevet_insert` to insert to the database. Once insertion is complete, as long as there were no errors along the way, it responds with a successful request and the Javascript continues. When a fetch request (GET request for fetching the data from the database), `flask_brevets.py` simply fetches the data via `brevet_find()` then returns the data as a JSON file. 
 
-## Grading Rubric
+## `calc.html`
+`calc.html` has been updated to make sure that the necesarry information is passed to `flask_brevets.py`. It does this by collecting the brevet distance (km) from the page, as well as the begin_date. The KM was already implemented, but that is also collected. These are then passed as arguments when sending the JSON HTTP request.
+ 
+Once the `flask_brevets.py` sends a response back (sending the JSON back) it unpacks the information (open and close time) and updates the HTML with the open and close time that. 
 
-* If your code works as expected: 100 points. This includes:
-	* Front-end implementation (`Submit` and `Display`).
-	
-	* Back-end implementation (Connecting to MongoDB, insertion and selection).
-	
-	* AJAX interaction between the frontend and backend (AJAX for `Submit` and `Display`).
-	
-	* Updating `README` with a clear specification (including details from Project 4).
-	
-	* Handling errors correctly.
-	
-	* Writing at least 2 correct tests using nose (put them in `tests`, follow Project 3 if necessary), and all should pass.
+`calc.html` has also now been updated to send and fetch data to/from the database.
 
-* If DB operations do not work as expected (either submit fails to store information, or display fails to retrieve and show information correctly), 60 points will be docked.
+On click of the submit button, the data is packaged up from the HTML file and sent as a POST request to `flask_brevets.py`. `flask_brevets.py` will then send back a result saying whether or not it failed. If it suceeded, all data is wiped from the screen and the user is left with the starting page (but their data has been saved). The user can now, if they wish, click on the Display button where a GET request is sent for a JSON file from `flask_brevets.py`. `flask_brevets.py`, as mentioned before, will get the data from the database and return the documents as a JSON file. The Javascript then unpack this data and updates each field with its respective data.  
 
-* If database-related tests are not found in `brevets/tests/`, or are incomplete, or do not pass, 20 points will be docked.
-
-* If docker does not build/run correctly, or the yaml file is not updated correctly, 5 will be assigned assuming README is updated.
-
+-----
 ## Authors
 
 Michal Young, Ram Durairajan. Updated by Ali Hassani.
+
+Adjusted by Josh Sawyer\
+jsawyer2@uoregon.edu
