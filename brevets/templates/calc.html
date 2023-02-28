@@ -236,6 +236,17 @@
                         success: function(data) {
                            if (data.status == 1) {
                               console.log("Successfuly Saved! Response: ", data);
+                              
+                              for (let i = 0; i < 20; i++) {
+                                 open_time_field[i].value = "";
+                                 close_time_field[i].value = "";
+                                 km[i].value = ""
+                                 mi[i].value = ""
+                              }
+
+                              $("#begin_date").val("2021-01-01T00:00")
+                              $("#brevet_dist_km").val("200");
+
                            }
                            else {
                               console.log("Insertion failed: ", data);
