@@ -169,25 +169,30 @@
                               console.log(data.err);
                            }
                            else {
-                              var len = data.result.length;
-                              for (let i = 0; i < len; i++) {
-                                 var cp = data.result[i].checkpoint
-                                 
-                                 if (data.result[i].open_time != "") {
-                                    open_time_field[cp].value = moment(data.result[i].open_time).format("YYYY-MM-DDTHH:mm");
-                                    close_time_field[cp].value = moment(data.result[i].close_time).format("YYYY-MM-DDTHH:mm");
-                                    km[cp].value = data.result[i].cp_dist;
-                                    mi[cp].value = (0.621371 * km[cp].value).toFixed(6);
-                                 }
-                                 else {
-                                    open_time_field[cp].value = "";
-                                    close_time_field[cp].value = "";
-                                    km[cp].value = ""
-                                    mi[cp].value = ""
-                                 }
+                              // First wipe the page (specifically the cp info)
+                              for (let i = 0; i < 20; i++) {
+                                 open_time_field[i].value = ""
+                                 close_time_field[i].value = ""
+                                 km[i].value = ""
+                                 mi[i].value = ""
                               }
-                              $("#begin_date").val(moment(data.result[0].start_time).format("YYYY-MM-DDTHH:mm"))
-                              $("#brevet_dist_km").val(data.result[0].brevet_dist);
+
+                              var cps = data.result.cp_data["cp"] // Checkpoints
+                              var ots = data.result.cp_data["ot"] // Open times
+                              var cts = data.result.cp_data["ct"] // Close times
+                              var cp_dist  = data.result.cp_data["cp_dist"] // km (distance)
+                              
+                              var len = cps.length; // Get number of checkpoints saved
+                              
+                              // Load Brevet info
+                              for (let i = 0; i < len; i++) {
+                                 open_time_field[cps[i]].value = moment(ots[i]).format("YYYY-MM-DDTHH:mm");
+                                 close_time_field[cps[i]].value = moment(cts[i]).format("YYYY-MM-DDTHH:mm");
+                                 km[cps[i]].value = cp_dist[i];
+                                 mi[cps[i]].value = (0.621371 * km[cps[i]].value).toFixed(6);
+                              }
+                              $("#begin_date").val(moment(data.result.start_time).format("YYYY-MM-DDTHH:mm"))
+                              $("#brevet_dist_km").val(data.result.brevet);
                               console.log("Data fetched!")  
                            }              
                          }
@@ -208,16 +213,31 @@
                      var kmArray = [];
                      var otfArray = [];
                      var ctfArray = [];
+                     var cpvals = [];
                      var start_date = $("#begin_date").val();
                      var brevet_distance = $("#brevet_dist_km").val();
+                     
+                     var items = [];
+                     var count = 0;
 
                      for (let i = 0; i < 20; i++) {
-                        kmArray.push(km[i].value);
-                        otfArray.push(open_time_field[i].value);
-                        ctfArray.push(close_time_field[i].value);
+                        if (km[i].value != '') {
+                           cpvals[count++] = i;
+                           kmArray.push(km[i].value);
+                           otfArray.push(open_time_field[i].value);
+                           ctfArray.push(close_time_field[i].value);
+                        }
                      }
 
-                     var data_to_send = {km: kmArray, otf: otfArray, ctf: ctfArray, start_date: start_date, brevet_distance: brevet_distance}
+                     items_json = {
+                        "cp": cpvals,
+                        "ot": otfArray,
+                        "ct": ctfArray,
+                        "cp_dist": kmArray,
+                     }
+
+
+                     var data_to_send = {brevet_distance: brevet_distance, start_date: start_date, items: items_json}
 
                      console.log("Inserting Data")
 

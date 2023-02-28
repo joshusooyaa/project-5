@@ -74,10 +74,11 @@ def _calc_times():
 
 @app.route("/_fetch")
 def _fetch_data():
-    data = brevet_find()
-
-    if len(data) != 0:
-        return flask.jsonify(result=data)
+    success, brevet, start, cp_data = brevet_find()
+    
+    if success: 
+        result = {"brevet": brevet, "start_time": start, "cp_data": cp_data}
+        return flask.jsonify(result=result)
     else:
         return flask.jsonify(err="No data saved")
 
@@ -88,46 +89,15 @@ def _insert_data():
     
     try:
         input_json = request.json
-        
-        km = input_json["km"]
-        ot = input_json["otf"]
-        ct = input_json["ctf"]
+
         start_date = input_json["start_date"]
         brevet_distance = input_json["brevet_distance"]
+        cp_data = input_json["items"]
+
+        status, message = brevet_insert(brevet_distance, start_date, cp_data)
         
-        # Check if any checkpoints are submitted ()
-        if (all(x == '' for x in km)):
-            message = "No checkpoint distances!"
-            raise Exception(message)
-        
-        # Check if control times are all emtpy (no info to submit) -- This will occur if brev_dist * 1.2 <= km
-        if (all(x == '' for x in ot) or all(y == '' for y in ct)):
-            message = "No control times!"
-            raise Exception(message)
-        
-        # Check if data is present, but control time(s) missing
-        # Also check if cps are out of order or same cp is entered
-        # This could occur if km > brevet distance * 1.2
-        max_val = '-1'
-        for i in range(len(km)):
-            if ((ot[i] == '' or ct[i] == '') and (km[i]) != ''):
-                message = "Data present, but control time(s) missing"
-                raise Exception(message)
-            
-            if (km[i] != ''):
-                if (int(km[i]) <= int(max_val)):
-                    app.logger.debug("max_value={}".format(max_val))
-                    app.logger.debug("km[i]={}".format(km[i]))
-                    message = "Invalid CP"
-                    raise Exception(message)
-            
-            if (km[i] != ''):
-                max_val = km[i]
-                
-        brevet_insert(ot, ct, km, start_date, brevet_distance)
-        
-        return flask.jsonify(result={"success": "1"}, message="Inserted!", status=1)
-    
+        return flask.jsonify(result={}, message=message, status=status)
+
     except:
         return flask.jsonify(result={}, message=message, status=0)
 
