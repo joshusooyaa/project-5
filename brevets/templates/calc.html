@@ -176,6 +176,10 @@
                                  km[i].value = ""
                                  mi[i].value = ""
                               }
+                              
+                              // data.result: 
+                              // {'brevet': '', 'start_time': '', 'cp_data': {'cp': [], 'ot': [], 'ct': [], 'cp_dist': []}}
+                              console.log(data.result)
 
                               var cps = data.result.cp_data["cp"] // Checkpoints
                               var ots = data.result.cp_data["ot"] // Open times
@@ -238,7 +242,7 @@
 
 
                      var data_to_send = {brevet_distance: brevet_distance, start_date: start_date, items: items_json}
-
+                     // {'brevet_distance': '', 'start_time': '', 'cp_dist': {'cp': [], 'ot': [], 'ct': [], 'cp_dist': []}}
                      console.log("Inserting Data")
 
                      $.ajax({
