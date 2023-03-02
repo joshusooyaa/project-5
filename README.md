@@ -1,7 +1,7 @@
 # RUSA ACP Control Time Calculator
 
 ## **How to run**
-Simply run the command `docker-compose up --build -d` or remove `-d` if you wish to look at the logs of the server. You can then connect to your local host via localhost:5001 and you can connect to the page.
+Simply run the command `docker-compose up --build -d` or remove `-d` if you wish to look at the logs of the server. You can then connect to your local host via localhost:5001 and you can connect to the page. To shut down the server and the webpage, use docker-compose down. This will close the two containers (mongo db and the webpage) and shutdown the connection. As one might expect, this also wipes the database since the container that the mongo image is in has been stopped, but more importantly, removed.
 
 ## `db_access.py`
 `db_access.py` contains two main functions, `brevet_insert` and `brevet_find`. These two functions are used to store and access the documents inside of the races collection inside of the brevets db.
