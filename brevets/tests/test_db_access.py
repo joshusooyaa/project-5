@@ -104,7 +104,8 @@ def test_integrated():
     assert(check[2] == insert['start_time'])
     assert(check[3] == insert['cp_data'])
     
-    # Clear races collection after testing
+    # Remove races collection after testing since testing data shouldn't 
+    # be stored
     db.races.drop()
     
     
